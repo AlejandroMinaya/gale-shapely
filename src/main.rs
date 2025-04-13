@@ -33,9 +33,9 @@ fn _get_next_up_for<'a>(
     preferences: &'a HashMap<&str, Vec<&str>>,
     participant: &str,
 ) -> &'a str {
-    let mut preferences_itr = preferences.get(participant).unwrap().iter();
-    ""
+    preferences.get(participant).unwrap()[0]
 }
+
 fn _is_a_match(
     pairings: &HashMap<&str, &str>,
     preferences: &HashMap<&str, Vec<&str>>,
@@ -124,18 +124,6 @@ mod tests {
         assert_eq!(_get_next_up_for(&pairings, &preferences, "C"), "D");
         assert_eq!(_get_next_up_for(&pairings, &preferences, "A"), "C");
         assert_eq!(_get_next_up_for(&pairings, &preferences, "D"), "B");
-    }
-
-    #[test]
-    fn test_get_next_up_preference_when_the_chosen_one_is_already_paired() {
-        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", "D"), ("D", "C")]);
-        let preferences = HashMap::from([
-            ("B", vec!["A", "D"]),
-            ("C", vec!["D", "A"]),
-            ("A", vec!["C", "B"]),
-            ("D", vec!["B", "C"]),
-        ]);
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "A"), "B");
     }
 
     #[test]

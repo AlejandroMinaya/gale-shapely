@@ -59,6 +59,18 @@ mod tests {
         assert!(_is_a_match(&pairings, &preferences, "C", "D"));
     }
     #[test]
+    fn test_is_no_match_when_receiving_end_is_with_preferred_party() {
+        let pairings = HashMap::from([("A", "C"), ("B", "D"), ("C", "A"), ("D", "B")]);
+        let preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["D", "A"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert!(!_is_a_match(&pairings, &preferences, "B", "A"));
+        assert!(!_is_a_match(&pairings, &preferences, "C", "D"));
+    }
+    #[test]
     fn test_get_preferences_by_participant() {
         let preferences = "
             B,C,A,D

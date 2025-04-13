@@ -28,7 +28,11 @@ fn _get_preferences_by_participant(preferences: &str) -> HashMap<&str, Vec<&str>
     ranking
 }
 
-fn _get_next_up_for<'a>(preferences: &'a HashMap<&str, Vec<&str>>, participant: &str) -> &'a str {
+fn _get_next_up_for<'a>(
+    pairings: &HashMap<&str, &str>,
+    preferences: &'a HashMap<&str, Vec<&str>>,
+    participant: &str,
+) -> &'a str {
     preferences.get(participant).unwrap()[0]
 }
 fn _is_a_match(
@@ -95,16 +99,29 @@ mod tests {
 
     #[test]
     fn test_get_next_up_preference_for_given_member() {
+        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
         let preferences = HashMap::from([
             ("B", vec!["A", "D"]),
             ("C", vec!["D", "A"]),
             ("A", vec!["C", "B"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert_eq!(_get_next_up_for(&preferences, "B"), "A");
-        assert_eq!(_get_next_up_for(&preferences, "C"), "D");
-        assert_eq!(_get_next_up_for(&preferences, "A"), "C");
-        assert_eq!(_get_next_up_for(&preferences, "D"), "B");
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "B"), "A");
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "C"), "D");
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "A"), "C");
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "D"), "B");
+    }
+
+    #[test]
+    fn test_get_next_up_preference_when_the_chosen_one_is_already_paired() {
+        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", "D"), ("D", "C")]);
+        let preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["D", "A"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "A"), "B");
     }
 
     #[test]

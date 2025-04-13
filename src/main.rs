@@ -1,4 +1,4 @@
-use std::{collections::HashMap, num};
+use std::collections::HashMap;
 
 pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
     /*
@@ -14,6 +14,7 @@ pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
 
     vec![vec!["B", "D"], vec!["C", "A"]]
 }
+
 fn _get_indexed_ranking(preferences: &str) -> HashMap<&str, Vec<&str>> {
     let mut preferences_lines = preferences.trim().lines();
     let participants = preferences_lines.next().unwrap().trim().split(",");
@@ -24,6 +25,10 @@ fn _get_indexed_ranking(preferences: &str) -> HashMap<&str, Vec<&str>> {
         ranking.insert(participant, personal_ranking.collect());
     }
     ranking
+}
+
+fn _get_next_up_for<'a>(preferences: &HashMap<&str, Vec<&str>>, participant: &str) -> &'a str {
+    "A"
 }
 
 pub fn main() {}
@@ -50,6 +55,20 @@ mod tests {
                 ("D", vec!["B", "C"]),
             ])
         )
+    }
+
+    #[test]
+    fn test_get_next_up_preference_for_given_member() {
+        let preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["D", "A"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert_eq!(_get_next_up_for(&preferences, "B"), "A");
+        assert_eq!(_get_next_up_for(&preferences, "C"), "D");
+        assert_eq!(_get_next_up_for(&preferences, "A"), "C");
+        assert_eq!(_get_next_up_for(&preferences, "D"), "B");
     }
 
     #[test]

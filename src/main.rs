@@ -144,6 +144,28 @@ mod tests {
     }
 
     #[test]
+    fn test_get_next_up_updates_preferences_based_on_pairings() {
+        let pairings = HashMap::from([("A", "B"), ("B", "A"), ("C", ""), ("D", "")]);
+        let mut preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["A", "D"]),
+            ("A", vec!["B", "C"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "C"), "D");
+        assert_eq!(_get_next_up_for(&pairings, &preferences, "D"), "C");
+        assert_eq!(
+            preferences,
+            HashMap::from([
+                ("B", vec!["A", "D"]),
+                ("C", vec!["D"]),
+                ("A", vec!["B", "C"]),
+                ("D", vec!["C"]),
+            ])
+        );
+    }
+
+    #[test]
     fn test_pairing_up_returns_stable_pairing() {
         /*
          * For the purposes of this test

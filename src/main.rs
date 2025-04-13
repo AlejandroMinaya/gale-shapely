@@ -42,10 +42,7 @@ fn _is_a_match(
     proposing: &str,
     receiving: &str,
 ) -> bool {
-    match pairings.get(receiving) {
-        Some(current_partner) => current_partner.is_empty(),
-        None => true,
-    }
+    _is_single(pairings, proposing)
 }
 fn _is_single(pairings: &HashMap<&str, &str>, participant: &str) -> bool {
     match pairings.get(participant) {

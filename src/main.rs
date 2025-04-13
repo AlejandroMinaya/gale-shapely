@@ -37,7 +37,10 @@ fn _is_a_match(
     proposing: &str,
     receiving: &str,
 ) -> bool {
-    true
+    match pairings.get(receiving) {
+        Some(current_partner) => current_partner.is_empty(),
+        None => true,
+    }
 }
 
 pub fn main() {}

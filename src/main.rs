@@ -33,7 +33,8 @@ fn _get_next_up_for<'a>(
     preferences: &'a HashMap<&str, Vec<&str>>,
     participant: &str,
 ) -> &'a str {
-    preferences.get(participant).unwrap()[0]
+    let mut preferences_itr = preferences.get(participant).unwrap().iter();
+    ""
 }
 fn _is_a_match(
     pairings: &HashMap<&str, &str>,
@@ -46,6 +47,12 @@ fn _is_a_match(
         None => true,
     }
 }
+fn _is_single(pairings: &HashMap<&str, &str>, participant: &str) -> bool {
+    match pairings.get(participant) {
+        Some(partner) => partner.is_empty(),
+        _ => false,
+    }
+}
 
 pub fn main() {}
 
@@ -53,6 +60,16 @@ pub fn main() {}
 mod tests {
     use super::*;
 
+    #[test]
+    fn test_is_single() {
+        let pairings = HashMap::from([("A", ""), ("B", "")]);
+        assert!(_is_single(&pairings, "A"));
+        assert!(_is_single(&pairings, "B"));
+        assert!(
+            !_is_single(&pairings, "K"),
+            "Should return false since this is not a participant"
+        );
+    }
     #[test]
     fn test_is_a_match_when_receiving_end_is_alone() {
         let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);

@@ -1,6 +1,6 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, num};
 
-pub fn gape_shapely(preferences: &str) -> Vec<Vec<char>> {
+pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
     /*
      * Algorithm
      * ---------
@@ -12,10 +12,18 @@ pub fn gape_shapely(preferences: &str) -> Vec<Vec<char>> {
      *      their next choice
      */
 
-    vec![vec!['B', 'D'], vec!['C', 'A']]
+    vec![vec!["B", "D"], vec!["C", "A"]]
 }
-fn _get_pairings_hash_map(preferences: &str) -> HashMap<&str, Vec<&str>> {
-    HashMap::new()
+fn _get_indexed_ranking(preferences: &str) -> HashMap<&str, Vec<&str>> {
+    let mut preferences_lines = preferences.trim().lines();
+    let participants = preferences_lines.next().unwrap().trim().split(",");
+
+    let mut ranking = HashMap::new();
+    for participant in participants {
+        let personal_ranking = preferences_lines.next().unwrap().trim().split(",");
+        ranking.insert(participant, personal_ranking.collect());
+    }
+    ranking
 }
 
 pub fn main() {}
@@ -26,14 +34,15 @@ mod tests {
 
     #[test]
     fn test_get_pairings_hash_map() {
-        let preferences = "4
-            BCAD
-            AD
-            DA
-            CB
-            BC";
+        let preferences = "
+            B,C,A,D
+            A,D
+            D,A
+            C,B
+            B,C
+        ";
         assert_eq!(
-            _get_pairings_hash_map(preferences),
+            _get_indexed_ranking(preferences),
             HashMap::from([
                 ("B", vec!["A", "D"]),
                 ("C", vec!["D", "A"]),
@@ -62,14 +71,13 @@ mod tests {
          * (B, D), (C, A)
          *
          */
-        let preferences = "4
-            BCAD
-            AD
-            DA
-            CB
-            BC";
+        let preferences = "B,C,A,D
+            A,D
+            D,A
+            C,B
+            B,C";
 
-        let expected = vec![vec!['B', 'D'], vec!['C', 'A']];
+        let expected = vec![vec!["B", "D"], vec!["C", "A"]];
 
         let actual = gape_shapely(preferences);
 
@@ -95,14 +103,13 @@ mod tests {
          * (A, B), (D, C)
          *
          */
-        let input = "4
-            ADCB
-            CB
-            CB
-            DA
-            AD";
+        let input = "A,D,C,B
+            C,B
+            C,B
+            D,A
+            A,D";
 
-        let expected = vec![vec!['A', 'B'], vec!['D', 'C']];
+        let expected = vec![vec!["A", "B"], vec!["D", "C"]];
 
         let actual = gape_shapely(input);
 

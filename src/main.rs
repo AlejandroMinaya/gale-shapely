@@ -42,7 +42,7 @@ fn _is_a_match(
     proposing: &str,
     receiving: &str,
 ) -> bool {
-    _is_single(pairings, proposing)
+    _is_single(pairings, receiving)
 }
 fn _is_single(pairings: &HashMap<&str, &str>, participant: &str) -> bool {
     match pairings.get(participant) {
@@ -78,6 +78,18 @@ mod tests {
         ]);
         assert!(_is_a_match(&pairings, &preferences, "B", "A"));
         assert!(_is_a_match(&pairings, &preferences, "C", "D"));
+    }
+
+    #[test]
+    fn test_is_a_match_when_receiving_end_also_prefers_them() {
+        let pairings = HashMap::from([("A", "B"), ("B", "A"), ("C", ""), ("D", "")]);
+        let preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["A", "D"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert!(_is_a_match(&pairings, &preferences, "C", "A"));
     }
     #[test]
     fn test_is_no_match_when_receiving_end_is_with_preferred_party() {

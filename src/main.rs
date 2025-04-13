@@ -11,11 +11,12 @@ pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
      *   3. Their chosen partner is paired with someone they prefer more, and the proposer move to
      *      their next choice
      */
+    let preferences = _get_preferences_by_participant(preferences);
 
     vec![vec!["B", "D"], vec!["C", "A"]]
 }
 
-fn _get_indexed_ranking(preferences: &str) -> HashMap<&str, Vec<&str>> {
+fn _get_preferences_by_participant(preferences: &str) -> HashMap<&str, Vec<&str>> {
     let mut preferences_lines = preferences.trim().lines();
     let participants = preferences_lines.next().unwrap().trim().split(",");
 
@@ -27,8 +28,16 @@ fn _get_indexed_ranking(preferences: &str) -> HashMap<&str, Vec<&str>> {
     ranking
 }
 
-fn _get_next_up_for<'a>(preferences: &HashMap<&str, Vec<&str>>, participant: &str) -> &'a str {
-    "A"
+fn _get_next_up_for<'a>(preferences: &'a HashMap<&str, Vec<&str>>, participant: &str) -> &'a str {
+    preferences.get(participant).unwrap()[0]
+}
+fn _is_a_match(
+    pairings: &HashMap<&str, &str>,
+    preferences: &HashMap<&str, Vec<&str>>,
+    proposing: &str,
+    receiving: &str,
+) -> bool {
+    true
 }
 
 pub fn main() {}
@@ -38,7 +47,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_get_pairings_hash_map() {
+    fn test_is_a_match_when_receiving_end_is_alone() {
+        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
+        let preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["D", "A"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert!(_is_a_match(&pairings, &preferences, "B", "A"));
+        assert!(_is_a_match(&pairings, &preferences, "C", "D"));
+    }
+    #[test]
+    fn test_get_preferences_by_participant() {
         let preferences = "
             B,C,A,D
             A,D
@@ -47,7 +68,7 @@ mod tests {
             B,C
         ";
         assert_eq!(
-            _get_indexed_ranking(preferences),
+            _get_preferences_by_participant(preferences),
             HashMap::from([
                 ("B", vec!["A", "D"]),
                 ("C", vec!["D", "A"]),

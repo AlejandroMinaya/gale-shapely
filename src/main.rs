@@ -42,8 +42,13 @@ fn _is_a_match(
     proposing: &str,
     receiving: &str,
 ) -> bool {
-    _is_single(pairings, receiving)
+    if _is_single(pairings, receiving) {
+        return true;
+    }
+
+    _get_next_up_for(pairings, preferences, receiving) == proposing
 }
+
 fn _is_single(pairings: &HashMap<&str, &str>, participant: &str) -> bool {
     match pairings.get(participant) {
         Some(partner) => partner.is_empty(),

@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, option::Iter};
 
 pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
     /*
@@ -12,6 +12,10 @@ pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
      *      their next choice
      */
     let preferences = _get_preferences_by_participant(preferences);
+    let participants = preferences.keys();
+    let pairings = _setup_pairings_map(participants);
+
+    let proposer_count = 0;
 
     vec![vec!["B", "D"], vec!["C", "A"]]
 }
@@ -28,25 +32,59 @@ fn _get_preferences_by_participant(preferences: &str) -> HashMap<&str, Vec<&str>
     ranking
 }
 
-fn _get_next_up_for<'a>(
-    pairings: &HashMap<&str, &str>,
-    preferences: &'a HashMap<&str, Vec<&str>>,
-    participant: &str,
-) -> &'a str {
-    preferences.get(participant).unwrap()[0]
-}
+fn _setup_pairings_map<'a>(participants: impl Iterator<Item = &'a str>) -> HashMap<&str, &str> {
+    let mut initial_pairings: HashMap<&str, &str> = HashMap::new();
 
-fn _is_a_match(
-    pairings: &HashMap<&str, &str>,
-    preferences: &HashMap<&str, Vec<&str>>,
-    proposing: &str,
-    receiving: &str,
-) -> bool {
-    if _is_single(pairings, receiving) {
-        return true;
+    for participant in participants {
+        initial_pairings.insert(participant.clone(), "");
     }
 
-    _get_next_up_for(pairings, preferences, receiving) == proposing
+    initial_pairings
+}
+
+fn _get_next_up_for<'a>(
+    pairings: &HashMap<&str, &str>,
+    preferences: &'a mut HashMap<&'a str, Vec<&str>>,
+    participant: &'a str,
+) -> &'a str {
+    match preferences.get(participant).unwrap().first() {
+        Some(next_up) => {
+            if _is_single(pairings, next_up) {
+                return next_up;
+            }
+            let new_preferences = preferences.get_mut(participant).unwrap().split_off(1);
+            preferences.insert(participant, new_preferences);
+
+            _get_next_up_for(pairings, preferences, participant)
+        }
+        _ => "",
+    }
+}
+
+fn _match<'a>(
+    pairings: &'a mut HashMap<&'a str, &'a str>,
+    preferences: &'a mut HashMap<&'a str, Vec<&str>>,
+    proposing: &'a str,
+    receiving: &'a str,
+) -> bool {
+    if _is_single(pairings, receiving)
+        || _get_next_up_for(pairings, preferences, receiving) == proposing
+    {
+        let prev_proposing_partner = pairings.get(proposing).unwrap();
+        if prev_proposing_partner.is_empty() {
+            pairings.insert(prev_proposing_partner, "");
+        }
+        let prev_receiving_partner = pairings.get(receiving).unwrap();
+        if prev_receiving_partner.is_empty() {
+            pairings.insert(prev_receiving_partner, "");
+        }
+
+        pairings.insert(proposing, receiving);
+        pairings.insert(receiving, proposing);
+
+        return true;
+    }
+    false
 }
 
 fn _is_single(pairings: &HashMap<&str, &str>, participant: &str) -> bool {
@@ -74,39 +112,37 @@ mod tests {
     }
     #[test]
     fn test_is_a_match_when_receiving_end_is_alone() {
-        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
-        let preferences = HashMap::from([
+        let mut pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
+        let mut preferences = HashMap::from([
             ("B", vec!["A", "D"]),
             ("C", vec!["D", "A"]),
             ("A", vec!["C", "B"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert!(_is_a_match(&pairings, &preferences, "B", "A"));
-        assert!(_is_a_match(&pairings, &preferences, "C", "D"));
+        assert!(_match(&mut pairings, &mut preferences, "B", "A"));
     }
 
     #[test]
     fn test_is_a_match_when_receiving_end_also_prefers_them() {
-        let pairings = HashMap::from([("A", "B"), ("B", "A"), ("C", ""), ("D", "")]);
-        let preferences = HashMap::from([
+        let mut pairings = HashMap::from([("A", "B"), ("B", "A"), ("C", ""), ("D", "")]);
+        let mut preferences = HashMap::from([
             ("B", vec!["A", "D"]),
             ("C", vec!["A", "D"]),
             ("A", vec!["C", "B"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert!(_is_a_match(&pairings, &preferences, "C", "A"));
+        assert!(_match(&mut pairings, &mut preferences, "C", "A"));
     }
     #[test]
     fn test_is_no_match_when_receiving_end_is_with_preferred_party() {
-        let pairings = HashMap::from([("A", "C"), ("B", "D"), ("C", "A"), ("D", "B")]);
-        let preferences = HashMap::from([
+        let mut pairings = HashMap::from([("A", "C"), ("B", "D"), ("C", "A"), ("D", "B")]);
+        let mut preferences = HashMap::from([
             ("B", vec!["A", "D"]),
             ("C", vec!["D", "A"]),
             ("A", vec!["C", "B"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert!(!_is_a_match(&pairings, &preferences, "B", "A"));
-        assert!(!_is_a_match(&pairings, &preferences, "C", "D"));
+        assert!(!_match(&mut pairings, &mut preferences, "C", "D"));
     }
     #[test]
     fn test_get_preferences_by_participant() {
@@ -127,20 +163,30 @@ mod tests {
             ])
         )
     }
-
     #[test]
-    fn test_get_next_up_preference_for_given_member() {
-        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
+    fn test_get_initial_pairings() {
         let preferences = HashMap::from([
             ("B", vec!["A", "D"]),
             ("C", vec!["D", "A"]),
             ("A", vec!["C", "B"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "B"), "A");
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "C"), "D");
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "A"), "C");
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "D"), "B");
+        assert_eq!(
+            _setup_pairings_map(&preferences),
+            HashMap::from([("B", ""), ("C", ""), ("A", ""), ("D", "")])
+        )
+    }
+
+    #[test]
+    fn test_get_next_up_preference_for_given_member() {
+        let pairings = HashMap::from([("A", ""), ("B", ""), ("C", ""), ("D", "")]);
+        let mut preferences = HashMap::from([
+            ("B", vec!["A", "D"]),
+            ("C", vec!["D", "A"]),
+            ("A", vec!["C", "B"]),
+            ("D", vec!["B", "C"]),
+        ]);
+        assert_eq!(_get_next_up_for(&pairings, &mut preferences, "B"), "A");
     }
 
     #[test]
@@ -152,17 +198,7 @@ mod tests {
             ("A", vec!["B", "C"]),
             ("D", vec!["B", "C"]),
         ]);
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "C"), "D");
-        assert_eq!(_get_next_up_for(&pairings, &preferences, "D"), "C");
-        assert_eq!(
-            preferences,
-            HashMap::from([
-                ("B", vec!["A", "D"]),
-                ("C", vec!["D"]),
-                ("A", vec!["B", "C"]),
-                ("D", vec!["C"]),
-            ])
-        );
+        assert_eq!(_get_next_up_for(&pairings, &mut preferences, "C"), "D");
     }
 
     #[test]

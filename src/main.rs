@@ -1,31 +1,21 @@
 use std::{collections::HashMap, option::Iter};
 
-pub fn gape_shapely(preferences: &str) -> Vec<Vec<&str>> {
+pub fn gape_shapely(preferences: String) -> String {
     /*
      * Algorithm
      * ---------
      * Proposers go one by one, proposing to their rank list in order
      * and any of the following scenarios could occur:
-     *   1. Their chosen partner is unpaired and they become partners
-     *   2. Their chosen partner is paired with someone they prefer less, and they become partners
-     *   3. Their chosen partner is paired with someone they prefer more, and the proposer move to
+     *   1. Their preferred partner is unpaired and they pair up
+     *   2. Their preferred partner is paired with someone they prefer less, and they become partners
+     *   3. Their preferred partner is paired with someone they prefer more, and the proposer move to
      *      their next choice
      */
-    let preferences = _read_preferences(preferences);
+    let mut input_itr = preferences.lines();
+    let participants = input_itr.next().unwrap().split(",");
+    let pairings: HashMap<String, Vec<String>> = HashMap::new();
 
-    vec![vec![], vec![]]
-}
-
-fn _read_preferences(preferences: &str) -> HashMap<&str, Vec<&str>> {
-    let mut preferences_lines = preferences.trim().lines();
-    let participants = preferences_lines.next().unwrap().trim().split(",");
-
-    let mut ranking = HashMap::new();
-    for participant in participants {
-        let participant_ranking = preferences_lines.next().unwrap().trim().split(",");
-        ranking.insert(participant, participant_ranking.collect());
-    }
-    ranking
+    "".to_string()
 }
 
 pub fn main() {}
@@ -57,9 +47,10 @@ mod tests {
             A,D
             D,A
             C,B
-            B,C";
+            B,C"
+        .to_string();
 
-        let expected = vec![vec!["B", "D"], vec!["C", "A"]];
+        let expected = "B,D\nC,A";
 
         let actual = gape_shapely(preferences);
 
@@ -89,9 +80,10 @@ mod tests {
             C,B
             C,B
             D,A
-            A,D";
+            A,D"
+        .to_string();
 
-        let expected = vec![vec!["A", "B"], vec!["D", "C"]];
+        let expected = "A,B\nD,C";
 
         let actual = gape_shapely(input);
 

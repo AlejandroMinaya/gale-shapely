@@ -1,6 +1,6 @@
-use std::{collections::HashMap, option::Iter};
+use std::collections::HashMap;
 
-pub fn gape_shapely(preferences: String) -> String {
+pub fn gape_shapely(_preferences: String) -> String {
     /*
      * Algorithm
      * ---------
@@ -11,14 +11,64 @@ pub fn gape_shapely(preferences: String) -> String {
      *   3. Their preferred partner is paired with someone they prefer more, and the proposer move to
      *      their next choice
      */
-    let mut input_itr = preferences.lines();
-    let participants = input_itr.next().unwrap().split(",");
-    let pairings: HashMap<String, Vec<String>> = HashMap::new();
+    let mut input_itr = _preferences.lines();
+    let all_participants = input_itr.next().unwrap().trim().split(",");
+
+    let mut pairings: HashMap<String, String> = HashMap::new();
+    let mut preferences: HashMap<String, Vec<String>> = HashMap::new();
+
+    for participant in all_participants.clone() {
+        preferences.insert(
+            participant.to_string(),
+            input_itr
+                .next()
+                .unwrap()
+                .trim()
+                .split(&[',', ' '][..])
+                .map(|a| a.to_string())
+                .collect(),
+        );
+        pairings.insert(participant.to_string(), "".to_string());
+    }
+    println!("Pairings {pairings:?}");
+
+    while pairings.values().any(|partner| partner.is_empty()) {
+        for suitor in all_participants.clone() {
+            let choices = &preferences[suitor];
+            println!("{suitor} Choices {choices:?}");
+
+            let boo = choices.first().unwrap();
+            println!("OPP - Pairings {pairings:?} {boo}");
+            let opp = pairings[boo].clone();
+
+            // 1. Chosen partner is available
+            if opp.is_empty() {
+                pairings.insert(boo.to_string(), suitor.to_string());
+                pairings.insert(suitor.to_string(), boo.to_string());
+                println!("{suitor} just hooked up with {boo}!");
+                println!("Pairings {pairings:?}");
+                continue;
+            }
+            let suitor_pos = preferences[boo].iter().position(|peep| *peep == *suitor);
+            let opp_pos = preferences[boo].iter().position(|peep| *peep == *opp);
+
+            if suitor_pos < opp_pos {
+                pairings.insert(boo.to_string(), suitor.to_string());
+                pairings.insert(suitor.to_string(), boo.to_string());
+                pairings.insert(opp.to_string(), "".to_string());
+                println!("{suitor} just stole {boo} from {opp}!");
+            }
+        }
+    }
 
     "".to_string()
 }
 
-pub fn main() {}
+pub fn main() {
+    let preferences = "B,C,A,D\nA,D \nD,A \nC,B \nB,C".to_string();
+
+    gape_shapely(preferences);
+}
 
 #[cfg(test)]
 mod tests {
@@ -43,12 +93,12 @@ mod tests {
          * (B, D), (C, A)
          *
          */
-        let preferences = "B,C,A,D
-            A,D
-            D,A
-            C,B
-            B,C"
-        .to_string();
+        let preferences = "B,C,A,D\
+            \nA,D
+            \nD,A
+            \nC,B
+            \nB,C"
+            .to_string();
 
         let expected = "B,D\nC,A";
 
@@ -77,11 +127,11 @@ mod tests {
          *
          */
         let input = "A,D,C,B
-            C,B
-            C,B
-            D,A
-            A,D"
-        .to_string();
+            \nC,B
+            \nC,B
+            \nD,A
+            \nA,D"
+            .to_string();
 
         let expected = "A,B\nD,C";
 

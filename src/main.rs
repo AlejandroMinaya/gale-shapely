@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub fn gape_shapely(_preferences: String) -> String {
     /*
@@ -24,12 +24,13 @@ pub fn gape_shapely(_preferences: String) -> String {
                 .next()
                 .unwrap()
                 .trim()
-                .split(&[',', ' '][..])
+                .split(",")
                 .map(|a| a.to_string())
                 .collect(),
         );
         pairings.insert(participant.to_string(), "".to_string());
     }
+    println!("Preferences {preferences:?}");
     println!("Pairings {pairings:?}");
 
     while pairings.values().any(|partner| partner.is_empty()) {
@@ -46,9 +47,9 @@ pub fn gape_shapely(_preferences: String) -> String {
                 pairings.insert(boo.to_string(), suitor.to_string());
                 pairings.insert(suitor.to_string(), boo.to_string());
                 println!("{suitor} just hooked up with {boo}!");
-                println!("Pairings {pairings:?}");
                 continue;
             }
+
             let suitor_pos = preferences[boo].iter().position(|peep| *peep == *suitor);
             let opp_pos = preferences[boo].iter().position(|peep| *peep == *opp);
 
@@ -60,32 +61,41 @@ pub fn gape_shapely(_preferences: String) -> String {
             }
         }
     }
+    let mut result = String::new();
+    let mut reported_participants: HashSet<String> = HashSet::new();
+    for _participant in all_participants.clone() {
+        let participant = _participant.to_string();
+        let partner = pairings[&participant].clone();
+        if reported_participants.contains(&participant) || reported_participants.contains(&partner)
+        {
+            continue;
+        }
+        result = format!("{result}{participant},{partner}\n");
+        reported_participants.insert(participant);
+        reported_participants.insert(partner);
+    }
 
-    "".to_string()
+    result.trim().to_string()
 }
 
-pub fn main() {
-    let preferences = "B,C,A,D\nA,D \nD,A \nC,B \nB,C".to_string();
-
-    gape_shapely(preferences);
-}
+pub fn main() {}
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_pairing_up_returns_stable_pairing() {
+    fn test_group_two_gale_shapely_returns_stable_pairing() {
         /*
          * For the purposes of this test
-         * Group #1: A(lina), D(olores)
+         * Group #1: A(nna), D(olores)
          * Group #2: B(eto), C(harlie)
          *
          * Rankings:
          * A = ["C", "B"]
          * B = ["A", "D"]
          * D = ["B", "C"]
-         * C = ["D", "A"]
+         * C = ["A", "D"]
          *
          * Proposers: Group #2
          *
@@ -93,12 +103,7 @@ mod tests {
          * (B, D), (C, A)
          *
          */
-        let preferences = "B,C,A,D\
-            \nA,D
-            \nD,A
-            \nC,B
-            \nB,C"
-            .to_string();
+        let preferences = "B,C,A,D\nA,D\nA,D\nC,B\nB,C".to_string();
 
         let expected = "B,D\nC,A";
 
@@ -108,10 +113,10 @@ mod tests {
     }
 
     #[test]
-    fn test_pairing_up_returns_stable_pairing_for_different_preferences() {
+    fn test_group_one_gale_shapely_returns_stable_pairing() {
         /*
          * For the purposes of this test
-         * Group #1: A(lina), D(olores)
+         * Group #1: A(nna), D(olores)
          * Group #2: B(eto), C(harlie)
          *
          * Rankings:
@@ -126,12 +131,7 @@ mod tests {
          * (A, B), (D, C)
          *
          */
-        let input = "A,D,C,B
-            \nC,B
-            \nC,B
-            \nD,A
-            \nA,D"
-            .to_string();
+        let input = "A,D,C,B\nC,B\nC,B\nD,A\nA,D".to_string();
 
         let expected = "A,B\nD,C";
 

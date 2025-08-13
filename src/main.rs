@@ -12,12 +12,12 @@ pub fn gape_shapely(_preferences: String) -> String {
      *      their next choice
      */
     let mut input_itr = _preferences.lines();
-    let all_participants = input_itr.next().unwrap().trim().split(",");
+    let all_participants: Vec<&str> = input_itr.next().unwrap().trim().split(",").collect();
 
     let mut pairings: HashMap<String, String> = HashMap::new();
     let mut preferences: HashMap<String, Vec<String>> = HashMap::new();
 
-    for participant in all_participants.clone() {
+    for participant in &all_participants {
         preferences.insert(
             participant.to_string(),
             input_itr
@@ -34,8 +34,8 @@ pub fn gape_shapely(_preferences: String) -> String {
     println!("Pairings {pairings:?}");
 
     while pairings.values().any(|partner| partner.is_empty()) {
-        for suitor in all_participants.clone() {
-            let choices = &preferences[suitor];
+        for suitor in &all_participants {
+            let choices = &preferences[*suitor];
             println!("{suitor} Choices {choices:?}");
 
             let boo = choices.first().unwrap();
@@ -63,16 +63,14 @@ pub fn gape_shapely(_preferences: String) -> String {
     }
     let mut result = String::new();
     let mut reported_participants: HashSet<String> = HashSet::new();
-    for _participant in all_participants.clone() {
-        let participant = _participant.to_string();
-        let partner = pairings[&participant].clone();
-        if reported_participants.contains(&participant) || reported_participants.contains(&partner)
-        {
+    for participant in &all_participants {
+        let partner = &pairings[*participant];
+        if reported_participants.contains(*participant) || reported_participants.contains(partner) {
             continue;
         }
         result = format!("{result}{participant},{partner}\n");
-        reported_participants.insert(participant);
-        reported_participants.insert(partner);
+        reported_participants.insert(participant.to_string());
+        reported_participants.insert(partner.to_string());
     }
 
     result.trim().to_string()
